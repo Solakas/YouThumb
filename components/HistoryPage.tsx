@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import ReactDOM from 'react-dom';
 import { historyService } from '../services/historyService';
 import { Thumbnail, Folder } from '../types';
-import { MoreVerticalIcon } from './Icons';
+import { MoreVerticalIcon, FolderIcon, FolderPlusIcon } from './Icons';
 
 interface HistoryPreviewProps {
   onReEdit: (imageDataUrl: string) => void;
@@ -10,19 +11,48 @@ interface HistoryPreviewProps {
 
 const ThumbnailCard: React.FC<{
     thumbnail: Thumbnail;
-    folders: Folder[];
     onDelete: (id: string) => void;
     onRename: (id: string, newName: string) => void;
-    onMove: (id: string, folderId: string | null) => void;
     onReEdit: (imageData: string) => void;
-}> = ({ thumbnail, folders, onDelete, onRename, onMove, onReEdit }) => {
+    onOpenMoveModal: (thumbnail: Thumbnail) => void;
+}> = ({ thumbnail, onDelete, onRename, onReEdit, onOpenMoveModal }) => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
-    const dropdownRef = React.useRef<HTMLDivElement>(null);
+    const menuButtonRef = useRef<HTMLButtonElement>(null);
+    const menuRef = useRef<HTMLDivElement>(null);
+    const [menuPosition, setMenuPosition] = useState<{ top: number, left: number } | null>(null);
 
     // State for modals
     const [isRenameModalOpen, setIsRenameModalOpen] = useState(false);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [newName, setNewName] = useState(thumbnail.name);
+
+    useEffect(() => {
+      if (isMenuOpen && menuButtonRef.current) {
+        const rect = menuButtonRef.current.getBoundingClientRect();
+        // Position menu below the button, aligned to the right edge. w-48 is 12rem (192px).
+        setMenuPosition({ top: rect.bottom + 4, left: rect.right - 192 });
+      }
+    }, [isMenuOpen]);
+
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            const target = event.target as Node;
+            if (
+                menuButtonRef.current && !menuButtonRef.current.contains(target) &&
+                menuRef.current && !menuRef.current.contains(target)
+            ) {
+                setIsMenuOpen(false);
+            }
+        };
+
+        if (isMenuOpen) {
+            document.addEventListener('mousedown', handleClickOutside);
+        }
+
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [isMenuOpen]);
 
 
     const openRenameModal = () => {
@@ -47,49 +77,42 @@ const ThumbnailCard: React.FC<{
         onDelete(thumbnail.id);
         setIsDeleteModalOpen(false);
     };
-
-    useEffect(() => {
-        const handleClickOutside = (event: MouseEvent) => {
-            if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-                setIsMenuOpen(false);
-            }
-        };
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => document.removeEventListener('mousedown', handleClickOutside);
-    }, []);
+    
+    const MenuContent = (
+        <div
+            ref={menuRef}
+            style={{
+                position: 'fixed',
+                top: `${menuPosition?.top}px`,
+                left: `${menuPosition?.left}px`,
+                zIndex: 50,
+            }}
+            className="w-48 bg-gray-700 rounded-md shadow-lg py-1"
+        >
+            <button onClick={() => { onReEdit(thumbnail.imageData); setIsMenuOpen(false); }} className="w-full text-left px-4 py-2 text-sm text-gray-200 hover:bg-gray-600">Re-Edit</button>
+            <button onClick={openRenameModal} className="w-full text-left px-4 py-2 text-sm text-gray-200 hover:bg-gray-600">Rename</button>
+            <button onClick={() => { onOpenMoveModal(thumbnail); setIsMenuOpen(false); }} className="w-full text-left px-4 py-2 text-sm text-gray-200 hover:bg-gray-600">Move to...</button>
+            <div className="border-t border-gray-600 my-1"></div>
+            <button onClick={openDeleteModal} className="w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-red-500 hover:text-white">Delete</button>
+        </div>
+    );
 
     return (
         <>
-            <div className="bg-gray-800 rounded-lg overflow-hidden group relative transition-transform transform hover:scale-105 w-64 flex-shrink-0">
-                <button onClick={() => onReEdit(thumbnail.imageData)} className="w-full aspect-video bg-black">
-                    <img src={thumbnail.imageData} alt={thumbnail.name} className="w-full h-full object-cover" loading="lazy" />
+            <div className="bg-gray-800 rounded-lg overflow-hidden group relative w-64 flex-shrink-0">
+                <button onClick={() => onReEdit(thumbnail.imageData)} className="w-full aspect-video bg-black overflow-hidden">
+                    <img src={thumbnail.imageData} alt={thumbnail.name} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" loading="lazy" />
                 </button>
                 <div className="p-3">
                     <p className="font-semibold text-sm truncate">{thumbnail.name}</p>
                     <p className="text-xs text-gray-400 mt-1">{new Date(thumbnail.createdAt).toLocaleString()}</p>
                 </div>
 
-                <div ref={dropdownRef} className="absolute top-2 right-2">
-                    <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="p-1.5 bg-gray-900 bg-opacity-50 rounded-full hover:bg-opacity-75 focus:outline-none">
+                <div className="absolute top-2 right-2">
+                    <button ref={menuButtonRef} onClick={() => setIsMenuOpen(!isMenuOpen)} className="p-1.5 bg-gray-900 bg-opacity-50 rounded-full hover:bg-opacity-75 focus:outline-none">
                         <MoreVerticalIcon className="h-5 w-5" />
                     </button>
-                    {isMenuOpen && (
-                        <div className="absolute right-0 mt-2 w-48 bg-gray-700 rounded-md shadow-lg z-10 py-1">
-                            <button onClick={() => { onReEdit(thumbnail.imageData); setIsMenuOpen(false); }} className="w-full text-left px-4 py-2 text-sm text-gray-200 hover:bg-gray-600">Re-Edit</button>
-                            <button onClick={openRenameModal} className="w-full text-left px-4 py-2 text-sm text-gray-200 hover:bg-gray-600">Rename</button>
-                            <div className="relative group/submenu">
-                                <button className="w-full text-left px-4 py-2 text-sm text-gray-200 hover:bg-gray-600">Move to...</button>
-                                <div className="absolute right-full -top-1 mt-0 w-48 bg-gray-700 rounded-md shadow-lg z-20 py-1 hidden group-hover/submenu:block">
-                                    <button onClick={() => onMove(thumbnail.id, null)} className="w-full text-left px-4 py-2 text-sm text-gray-200 hover:bg-gray-600">Uncategorized</button>
-                                    {folders.map(f => (
-                                        <button key={f.id} onClick={() => onMove(thumbnail.id, f.id)} className="w-full text-left px-4 py-2 text-sm text-gray-200 hover:bg-gray-600 truncate">{f.name}</button>
-                                    ))}
-                                </div>
-                            </div>
-                            <div className="border-t border-gray-600 my-1"></div>
-                            <button onClick={openDeleteModal} className="w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-red-500 hover:text-white">Delete</button>
-                        </div>
-                    )}
+                    {isMenuOpen && menuPosition && ReactDOM.createPortal(MenuContent, document.body)}
                 </div>
             </div>
 
@@ -138,6 +161,12 @@ export const HistoryPreview: React.FC<HistoryPreviewProps> = ({ onReEdit, histor
     const [isCreateProjectModalOpen, setIsCreateProjectModalOpen] = useState(false);
     const [newProjectName, setNewProjectName] = useState('');
 
+    // State for the Move modal
+    const [movingThumbnail, setMovingThumbnail] = useState<Thumbnail | null>(null);
+    const [moveTargetFolderId, setMoveTargetFolderId] = useState<string>('uncategorized');
+    const [isCreatingProjectInMove, setIsCreatingProjectInMove] = useState(false);
+    const [newProjectNameInMove, setNewProjectNameInMove] = useState('');
+
     const refreshData = useCallback(() => {
         const { thumbnails, folders } = historyService.getData();
         setThumbnails(thumbnails);
@@ -169,14 +198,6 @@ export const HistoryPreview: React.FC<HistoryPreviewProps> = ({ onReEdit, histor
             refreshData();
         }
     };
-    
-    const handleThumbnailMove = (id: string, folderId: string | null) => {
-        const thumb = thumbnails.find(t => t.id === id);
-        if (thumb) {
-            historyService.updateThumbnail({ ...thumb, folderId });
-            refreshData();
-        }
-    };
 
     const handleCreateNewProject = () => {
         if (newProjectName.trim()) {
@@ -187,6 +208,40 @@ export const HistoryPreview: React.FC<HistoryPreviewProps> = ({ onReEdit, histor
             setNewProjectName('');
         }
     };
+    
+    // --- Move Modal Logic ---
+    const handleOpenMoveModal = (thumbnail: Thumbnail) => {
+        setMovingThumbnail(thumbnail);
+        setMoveTargetFolderId(thumbnail.folderId ?? 'uncategorized');
+        setIsCreatingProjectInMove(false);
+        setNewProjectNameInMove('');
+    };
+
+    const handleCloseMoveModal = () => {
+        setMovingThumbnail(null);
+    };
+
+    const handleConfirmMove = () => {
+        if (!movingThumbnail) return;
+        const finalFolderId = moveTargetFolderId === 'uncategorized' ? null : moveTargetFolderId;
+        const thumb = thumbnails.find(t => t.id === movingThumbnail.id);
+        if (thumb) {
+            historyService.updateThumbnail({ ...thumb, folderId: finalFolderId });
+            refreshData();
+        }
+        handleCloseMoveModal();
+    };
+
+    const handleCreateProjectInMove = () => {
+        if (newProjectNameInMove.trim()) {
+            const newFolder = historyService.addFolder(newProjectNameInMove.trim());
+            refreshData(); // This updates the folder list in the modal
+            setMoveTargetFolderId(newFolder.id);
+            setIsCreatingProjectInMove(false);
+            setNewProjectNameInMove('');
+        }
+    };
+    // --- End Move Modal Logic ---
 
     const filteredThumbnails = useMemo(() => {
         const allSorted = thumbnails.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
@@ -236,11 +291,10 @@ export const HistoryPreview: React.FC<HistoryPreviewProps> = ({ onReEdit, histor
                             <ThumbnailCard 
                                 key={thumb.id} 
                                 thumbnail={thumb} 
-                                folders={folders}
                                 onDelete={handleThumbnailDelete}
                                 onRename={handleThumbnailRename}
-                                onMove={handleThumbnailMove}
                                 onReEdit={onReEdit}
+                                onOpenMoveModal={handleOpenMoveModal}
                             />
                         ))}
                          {filteredThumbnails.length === 0 && (
@@ -275,6 +329,77 @@ export const HistoryPreview: React.FC<HistoryPreviewProps> = ({ onReEdit, histor
                         <div className="flex justify-end gap-2 mt-4">
                             <button onClick={() => setIsCreateProjectModalOpen(false)} className="px-4 py-2 bg-gray-600 hover:bg-gray-500 rounded-md text-sm">Cancel</button>
                             <button onClick={handleCreateNewProject} disabled={!newProjectName.trim()} className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-md text-sm disabled:opacity-50">Create</button>
+                        </div>
+                    </div>
+                </div>
+            )}
+            {movingThumbnail && (
+                <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50" role="dialog" aria-modal="true">
+                    <div className="bg-gray-800 rounded-lg p-6 w-full max-w-sm space-y-4 flex flex-col">
+                        <h3 className="text-lg font-semibold">Move Thumbnail</h3>
+                        <p className="text-sm text-gray-400 -mt-2">Moving: <span className="font-medium text-gray-200 truncate">{movingThumbnail.name}</span></p>
+
+                        <div>
+                            <label className="block text-sm font-medium text-gray-300 mb-1">Destination Project</label>
+                            <div className="bg-gray-900 rounded-md p-2 h-48 overflow-y-auto border border-gray-700 space-y-1">
+                                <button
+                                    onClick={() => { setMoveTargetFolderId('uncategorized'); setIsCreatingProjectInMove(false); }}
+                                    className={`w-full text-left px-3 py-2 rounded-md text-sm flex items-center gap-2 transition-colors ${
+                                        moveTargetFolderId === 'uncategorized' && !isCreatingProjectInMove ? 'bg-blue-600 text-white' : 'hover:bg-gray-700'
+                                    }`}
+                                >
+                                    <FolderIcon className="h-4 w-4" />
+                                    Uncategorized
+                                </button>
+                                {sortedFolders.map(folder => (
+                                    <button
+                                        key={folder.id}
+                                        onClick={() => { setMoveTargetFolderId(folder.id); setIsCreatingProjectInMove(false); }}
+                                        className={`w-full text-left px-3 py-2 rounded-md text-sm flex items-center gap-2 transition-colors truncate ${
+                                            moveTargetFolderId === folder.id && !isCreatingProjectInMove ? 'bg-blue-600 text-white' : 'hover:bg-gray-700'
+                                        }`}
+                                    >
+                                        <FolderIcon className="h-4 w-4" />
+                                        {folder.name}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
+                        {!isCreatingProjectInMove ? (
+                            <button
+                                onClick={() => { setIsCreatingProjectInMove(true); setMoveTargetFolderId('new'); }}
+                                className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-gray-700 hover:bg-gray-600 rounded-md text-sm transition-colors"
+                            >
+                                <FolderPlusIcon className="h-4 w-4" />
+                                New Project
+                            </button>
+                        ) : (
+                            <form onSubmit={(e) => { e.preventDefault(); handleCreateProjectInMove(); }} className="space-y-2">
+                                <input
+                                    type="text"
+                                    value={newProjectNameInMove}
+                                    onChange={(e) => setNewProjectNameInMove(e.target.value)}
+                                    className="w-full bg-gray-700 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                                    placeholder="Enter new project name..."
+                                    autoFocus
+                                />
+                                <div className="flex justify-end gap-2">
+                                    <button type="button" onClick={() => { setIsCreatingProjectInMove(false); setMoveTargetFolderId(movingThumbnail.folderId ?? 'uncategorized'); }} className="px-3 py-1 bg-gray-600 hover:bg-gray-500 rounded-md text-xs">Cancel</button>
+                                    <button type="submit" disabled={!newProjectNameInMove.trim()} className="px-3 py-1 bg-blue-600 hover:bg-blue-700 rounded-md text-xs disabled:opacity-50">Create</button>
+                                </div>
+                            </form>
+                        )}
+
+                        <div className="flex justify-end gap-2 pt-2">
+                            <button onClick={handleCloseMoveModal} className="px-4 py-2 bg-gray-600 hover:bg-gray-500 rounded-md text-sm">Cancel</button>
+                            <button 
+                                onClick={handleConfirmMove}
+                                disabled={movingThumbnail.folderId === (moveTargetFolderId === 'uncategorized' ? null : moveTargetFolderId)}
+                                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-md text-sm disabled:opacity-50 flex items-center justify-center w-24"
+                            >
+                                Move
+                            </button>
                         </div>
                     </div>
                 </div>

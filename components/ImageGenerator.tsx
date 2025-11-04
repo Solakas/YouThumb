@@ -3,7 +3,7 @@ import { geminiService } from '../services/geminiService';
 import { historyService } from '../services/historyService';
 import { PromptInput } from './PromptInput';
 import { Spinner } from './Spinner';
-import { DownloadIcon } from './Icons';
+import { DownloadIcon, FolderIcon, FolderPlusIcon } from './Icons';
 import { GENERATE_PROMPT_SUGGESTIONS } from '../constants';
 import { Folder } from '../types';
 
@@ -25,6 +25,7 @@ export const ImageGenerator: React.FC<ImageGeneratorProps> = ({ onHistoryUpdate 
   const [folders, setFolders] = useState<Folder[]>([]);
   const [selectedFolderId, setSelectedFolderId] = useState<string>('uncategorized');
   const [newProjectName, setNewProjectName] = useState('');
+  const [isCreatingNewProject, setIsCreatingNewProject] = useState(false);
 
 
   const handleGenerate = async (p: string) => {
@@ -63,21 +64,29 @@ export const ImageGenerator: React.FC<ImageGeneratorProps> = ({ onHistoryUpdate 
     setFolders(folders.sort((a,b) => a.name.localeCompare(b.name)));
     setSelectedFolderId('uncategorized');
     setNewProjectName('');
+    setIsCreatingNewProject(false);
     setIsSaveModalOpen(true);
   };
 
+  const handleCreateNewProject = () => {
+    if (!newProjectName.trim()) return;
+    try {
+        const newFolder = historyService.addFolder(newProjectName.trim());
+        const { folders } = historyService.getData();
+        setFolders(folders.sort((a,b) => a.name.localeCompare(b.name)));
+        setSelectedFolderId(newFolder.id);
+        setNewProjectName('');
+        setIsCreatingNewProject(false);
+    } catch (error) {
+        setError(error instanceof Error ? error.message : "Error creating project.");
+    }
+  };
+
   const handleConfirmSave = async () => {
-    if (!generatedImage || !saveName.trim()) return;
-    if (selectedFolderId === 'new' && !newProjectName.trim()) return;
+    if (!generatedImage || !saveName.trim() || isSaving) return;
     
     setIsSaving(true);
-    let finalFolderId: string | null = null;
-    if (selectedFolderId === 'new') {
-        const newFolder = historyService.addFolder(newProjectName.trim());
-        finalFolderId = newFolder.id;
-    } else if (selectedFolderId !== 'uncategorized') {
-        finalFolderId = selectedFolderId;
-    }
+    const finalFolderId = selectedFolderId === 'uncategorized' ? null : selectedFolderId;
 
     await historyService.addThumbnail(generatedImage, saveName.trim(), finalFolderId);
     setSaveMessage(`'${saveName.trim()}' saved to history!`);
@@ -136,7 +145,7 @@ export const ImageGenerator: React.FC<ImageGeneratorProps> = ({ onHistoryUpdate 
       )}
       {isSaveModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50" role="dialog" aria-modal="true">
-          <div className="bg-gray-800 rounded-lg p-6 w-full max-w-sm space-y-4">
+            <div className="bg-gray-800 rounded-lg p-6 w-full max-w-sm space-y-4 flex flex-col">
             <h3 className="text-lg font-semibold">Save Thumbnail</h3>
             
             <div>
@@ -152,40 +161,62 @@ export const ImageGenerator: React.FC<ImageGeneratorProps> = ({ onHistoryUpdate 
             </div>
 
             <div>
-              <label htmlFor="project-select-generator" className="block text-sm font-medium text-gray-300 mb-1">Project</label>
-              <select
-                id="project-select-generator"
-                value={selectedFolderId}
-                onChange={(e) => setSelectedFolderId(e.target.value)}
-                className="w-full bg-gray-700 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="uncategorized">Uncategorized</option>
+              <label className="block text-sm font-medium text-gray-300 mb-1">Project</label>
+              <div className="bg-gray-900 rounded-md p-2 h-48 overflow-y-auto border border-gray-700 space-y-1">
+                <button
+                  onClick={() => { setSelectedFolderId('uncategorized'); setIsCreatingNewProject(false); }}
+                  className={`w-full text-left px-3 py-2 rounded-md text-sm flex items-center gap-2 transition-colors ${
+                    selectedFolderId === 'uncategorized' && !isCreatingNewProject ? 'bg-blue-600 text-white' : 'hover:bg-gray-700'
+                  }`}
+                >
+                  <FolderIcon className="h-4 w-4" />
+                  Uncategorized
+                </button>
                 {folders.map(folder => (
-                  <option key={folder.id} value={folder.id}>{folder.name}</option>
+                  <button
+                    key={folder.id}
+                    onClick={() => { setSelectedFolderId(folder.id); setIsCreatingNewProject(false); }}
+                    className={`w-full text-left px-3 py-2 rounded-md text-sm flex items-center gap-2 transition-colors truncate ${
+                      selectedFolderId === folder.id && !isCreatingNewProject ? 'bg-blue-600 text-white' : 'hover:bg-gray-700'
+                    }`}
+                  >
+                    <FolderIcon className="h-4 w-4" />
+                    {folder.name}
+                  </button>
                 ))}
-                <option value="new">-- Create New Project --</option>
-              </select>
+              </div>
             </div>
-
-            {selectedFolderId === 'new' && (
-              <div>
-                <label htmlFor="new-project-name-generator" className="block text-sm font-medium text-gray-300 mb-1">New Project Name</label>
-                <input
-                    id="new-project-name-generator"
+            
+            {!isCreatingNewProject ? (
+              <button
+                  onClick={() => { setIsCreatingNewProject(true); setSelectedFolderId('new'); }}
+                  className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-gray-700 hover:bg-gray-600 rounded-md text-sm transition-colors"
+              >
+                  <FolderPlusIcon className="h-4 w-4" />
+                  New Project
+              </button>
+            ) : (
+              <form onSubmit={(e) => { e.preventDefault(); handleCreateNewProject(); }} className="space-y-2">
+                  <input
                     type="text"
                     value={newProjectName}
                     onChange={(e) => setNewProjectName(e.target.value)}
-                    className="w-full bg-gray-700 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Enter project name..."
-                />
-              </div>
+                    className="w-full bg-gray-700 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                    placeholder="Enter new project name..."
+                    autoFocus
+                  />
+                  <div className="flex justify-end gap-2">
+                      <button type="button" onClick={() => { setIsCreatingNewProject(false); setSelectedFolderId('uncategorized'); }} className="px-3 py-1 bg-gray-600 hover:bg-gray-500 rounded-md text-xs">Cancel</button>
+                      <button type="submit" disabled={!newProjectName.trim()} className="px-3 py-1 bg-blue-600 hover:bg-blue-700 rounded-md text-xs disabled:opacity-50">Create</button>
+                  </div>
+              </form>
             )}
 
             <div className="flex justify-end gap-2 pt-2">
               <button onClick={() => setIsSaveModalOpen(false)} className="px-4 py-2 bg-gray-600 hover:bg-gray-500 rounded-md text-sm">Cancel</button>
               <button 
                 onClick={handleConfirmSave} 
-                disabled={!saveName.trim() || isSaving || (selectedFolderId === 'new' && !newProjectName.trim())} 
+                disabled={!saveName.trim() || isSaving} 
                 className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-md text-sm disabled:opacity-50 flex items-center justify-center w-24"
               >
                 {isSaving ? <Spinner className="w-4 h-4" /> : 'Save'}
