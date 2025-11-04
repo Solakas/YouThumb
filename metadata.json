@@ -1,0 +1,5 @@
+{
+  "name": "YouThumb",
+  "description": "YouThumb: An AI-powered application to generate and edit YouTube thumbnails using a chat-based interface. Features include image editing with text prompts, new image generation, undo/redo functionality, and a helpful chatbot.",
+  "requestFramePermissions": []
+}
