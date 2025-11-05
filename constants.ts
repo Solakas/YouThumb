@@ -9,14 +9,6 @@ export const EDIT_PROMPT_SUGGESTIONS = [
   'Add a glowing outline to the main subject'
 ];
 
-export const ASK_PROMPT_SUGGESTIONS = [
-  'How do I use the selection tools?',
-  'Give me ideas for a travel vlog thumbnail',
-  'What makes a thumbnail stand out?',
-  'Explain the adjustment sliders',
-];
-
-
 export const GENERATE_PROMPT_SUGGESTIONS = [
     'A majestic lion wearing a crown, cinematic lighting',
     'A futuristic cityscape at night with flying cars',

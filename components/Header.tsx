@@ -1,6 +1,6 @@
 import React from 'react';
 
-type Page = 'upload' | 'editor' | 'generator' | 'chatbot';
+type Page = 'home' | 'editor' | 'generator';
 
 interface HeaderProps {
     currentPage: Page;
@@ -12,31 +12,30 @@ export const Header: React.FC<HeaderProps> = ({ currentPage, setCurrentPage }) =
     const navItems = [
         { id: 'editor', label: 'Editor' },
         { id: 'generator', label: 'Generator' },
-        { id: 'chatbot', label: 'Chatbot' }
     ];
     
-    // Editor tab is also active on the upload page
-    const isEditorActive = currentPage === 'editor' || currentPage === 'upload';
+    // Editor tab is also active on the home page
+    const isEditorActive = currentPage === 'editor' || currentPage === 'home';
 
     return (
-        <header className="bg-gray-800 shadow-md">
+        <header className="bg-yt-neutral-bg-900 shadow-yt1 flex-shrink-0">
             <nav className="container mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex items-center justify-between h-16">
                     <div className="flex items-center">
-                       <h1 className="text-xl font-bold text-white">YouThumb</h1>
+                       <h1 className="text-h4 font-bold text-yt-neutral-text">YouThumb</h1>
                     </div>
-                    <div className="flex items-center space-x-2 sm:space-x-4">
+                    <div className="flex items-center space-x-2">
                         {navItems.map(item => (
                              <button 
                                 key={item.id}
                                 onClick={() => setCurrentPage(item.id as Page)}
-                                className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                                className={`px-4 py-1.5 rounded-lg text-body-sm font-bold transition-colors focus:outline-none focus:ring-2 focus:ring-yt-accent-focus ${
                                     (item.id === 'editor' ? isEditorActive : currentPage === item.id)
-                                    ? 'bg-blue-600 text-white' 
-                                    : 'text-gray-300 hover:bg-gray-700 hover:text-white'
+                                    ? 'bg-yt-primary-500 text-black' 
+                                    : 'text-yt-neutral-text3 hover:bg-yt-neutral-bg-800 hover:text-yt-neutral-text'
                                 }`}
-                                // Can't go to editor without uploading first
-                                disabled={item.id === 'editor' && currentPage === 'upload'}
+                                // Can't go to editor without an image first
+                                disabled={item.id === 'editor' && currentPage === 'home'}
                             >
                                 {item.label}
                             </button>

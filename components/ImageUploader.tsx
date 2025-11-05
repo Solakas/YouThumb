@@ -1,5 +1,4 @@
 import React, { useState, useCallback } from 'react';
-import { UploadCloudIcon } from './Icons';
 
 interface ImageUploaderProps {
   onImageUpload: (imageDataUrl: string) => void;
@@ -62,35 +61,31 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageUpload }) =
 
 
   return (
-    <div className="flex-grow flex flex-col items-center justify-center text-center">
-      <div className="w-full max-w-2xl">
-        <h1 className="text-4xl sm:text-5xl font-bold mb-4">YouThumb</h1>
-        <p className="text-lg text-gray-400 mb-8">Upload an image to start editing with the power of AI. Or, use the generator to create a new one from scratch.</p>
-
-        <div 
-          onDrop={onDrop}
-          onDragOver={onDragOver}
-          onDragEnter={onDragEnter}
-          onDragLeave={onDragLeave}
-          className={`relative border-2 border-dashed rounded-lg p-10 sm:p-20 transition-colors ${isDragging ? 'border-blue-500 bg-gray-800' : 'border-gray-600'}`}>
-          
-          <input 
-            type="file"
-            id="file-upload"
-            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-            accept="image/*"
-            onChange={onFileSelect}
-          />
-          <label htmlFor="file-upload" className="cursor-pointer flex flex-col items-center justify-center">
-            <UploadCloudIcon className="h-16 w-16 text-gray-500 mb-4"/>
-            <p className="font-semibold text-lg">
-              <span className="text-blue-400">Click to upload</span> or drag and drop
-            </p>
-            <p className="text-gray-500 text-sm mt-1">PNG, JPG, WEBP, etc.</p>
-          </label>
-        </div>
-        {error && <p className="text-red-400 mt-4">{error}</p>}
+    <div className="flex-grow flex flex-col items-center justify-center text-center h-full">
+      <h2 className="text-h2 font-bold text-center mb-8">Upload an Image</h2>
+      <div 
+        onDrop={onDrop}
+        onDragOver={onDragOver}
+        onDragEnter={onDragEnter}
+        onDragLeave={onDragLeave}
+        className={`relative border-thick border-solid rounded-2xl p-12 transition-all duration-200 w-full h-full flex flex-col justify-center focus-within:ring-2 focus-within:ring-yt-accent-focus ${isDragging ? 'border-yt-primary-500 bg-yt-neutral-bg-800 motion-safe:shadow-glowPrimary' : 'border-yt-neutral-border'}`}>
+        
+        <input 
+          type="file"
+          id="file-upload"
+          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+          accept="image/*"
+          onChange={onFileSelect}
+        />
+        <label htmlFor="file-upload" className="cursor-pointer flex flex-col items-center justify-center">
+          <i className="fa-solid fa-upload text-[32px] text-yt-neutral-text3 mb-4" aria-hidden="true"></i>
+          <p className="font-bold text-body-lg">
+            <span className="text-yt-primary-400">Click to upload</span> or drag and drop
+          </p>
+          <p className="text-yt-neutral-text3 text-body-sm mt-1">PNG, JPG, WEBP, etc.</p>
+        </label>
       </div>
+      {error && <p className="text-yt-semantic-danger mt-4">{error}</p>}
     </div>
   );
 };

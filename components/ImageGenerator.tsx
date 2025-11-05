@@ -3,7 +3,6 @@ import { geminiService } from '../services/geminiService';
 import { historyService } from '../services/historyService';
 import { PromptInput } from './PromptInput';
 import { Spinner } from './Spinner';
-import { DownloadIcon, FolderIcon, FolderPlusIcon } from './Icons';
 import { GENERATE_PROMPT_SUGGESTIONS } from '../constants';
 import { Folder } from '../types';
 
@@ -100,87 +99,88 @@ export const ImageGenerator: React.FC<ImageGeneratorProps> = ({ onHistoryUpdate 
   };
 
   return (
-    <div className="flex-grow flex flex-col items-center gap-6">
+    <div className="flex-grow flex flex-col items-center gap-8">
       <div className="w-full max-w-4xl text-center">
-        <h1 className="text-3xl sm:text-4xl font-bold mb-2">Thumbnail Generator</h1>
-        <p className="text-gray-400">Describe the thumbnail you want to create. Be as descriptive as possible!</p>
+        <h1 className="text-h1 font-extrabold mb-4">Thumbnail Generator</h1>
+        <p className="text-body-lg text-yt-neutral-text3 mb-8">Describe the thumbnail you want to create. Be as descriptive as possible!</p>
       </div>
       <div className="w-full max-w-4xl">
         <PromptInput 
-            onSend={handleGenerate} 
+            // Fix: Wrap the handler in a lambda to extract the prompt from the data object, resolving the type mismatch.
+            onSend={({ prompt }) => handleGenerate(prompt)} 
             isLoading={isLoading}
             suggestions={GENERATE_PROMPT_SUGGESTIONS}
             placeholder="e.g., A majestic lion wearing a crown, cinematic lighting"
         />
       </div>
 
-      <div className="w-full max-w-4xl flex-grow aspect-w-16 aspect-h-9 bg-gray-800 rounded-lg flex items-center justify-center p-4">
+      <div className="w-full max-w-4xl flex-grow aspect-w-16 aspect-h-9 bg-yt-neutral-bg-900 rounded-2xl flex items-center justify-center p-4">
         {isLoading && <Spinner className="w-16 h-16" />}
-        {error && <p className="text-red-400 text-center">{error}</p>}
+        {error && <p className="text-yt-semantic-danger text-center">{error}</p>}
         {generatedImage && (
-            <img src={generatedImage} alt="Generated Thumbnail" className="object-contain max-w-full max-h-full rounded-md" />
+            <img src={generatedImage} alt="Generated Thumbnail" className="object-contain max-w-full max-h-full rounded-lg" />
         )}
         {!isLoading && !error && !generatedImage && (
-            <div className="text-center text-gray-500">
-                <p className="text-lg">Your generated image will appear here.</p>
+            <div className="text-center text-yt-neutral-text3">
+                <p className="text-body-lg">Your generated image will appear here.</p>
                 <p>All images are generated in 16:9 aspect ratio.</p>
             </div>
         )}
       </div>
 
       {generatedImage && (
-          <div className="flex flex-col items-center justify-center gap-2">
+          <div className="flex flex-col items-center justify-center gap-4">
             <div className="flex items-center justify-center gap-4">
-                <button onClick={openSaveModal} className="px-6 py-3 bg-blue-600 hover:bg-blue-700 rounded-md transition-colors font-semibold">
+                <button onClick={openSaveModal} className="px-6 h-control-lg bg-yt-primary-500 text-black hover:bg-yt-primary-600 rounded-lg transition-colors font-bold motion-safe:hover:shadow-glowPrimary focus:outline-none focus:ring-2 focus:ring-yt-accent-focus">
                     Save to History
                 </button>
-                <button onClick={handleDownload} className="flex items-center gap-2 px-6 py-3 bg-green-600 hover:bg-green-700 rounded-md transition-colors font-semibold">
-                    <DownloadIcon className="h-5 w-5" /> Download Image
+                <button onClick={handleDownload} className="flex items-center gap-2 px-6 h-control-lg bg-yt-semantic-success text-yt-neutral-text hover:bg-green-600 rounded-lg transition-colors font-bold focus:outline-none focus:ring-2 focus:ring-yt-accent-focus">
+                    <i className="fa-solid fa-download text-h4" aria-hidden="true"></i> Download Image
                 </button>
             </div>
             <div className="h-5">
-                {saveMessage && <p className="text-green-400 text-sm">{saveMessage}</p>}
+                {saveMessage && <p className="text-yt-semantic-success text-body-sm">{saveMessage}</p>}
             </div>
           </div>
       )}
       {isSaveModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50" role="dialog" aria-modal="true">
-            <div className="bg-gray-800 rounded-lg p-6 w-full max-w-sm space-y-4 flex flex-col">
-            <h3 className="text-lg font-semibold">Save Thumbnail</h3>
+            <div className="bg-yt-neutral-bg-900 rounded-2xl p-6 w-full max-w-sm space-y-4 flex flex-col shadow-yt3">
+            <h3 className="text-h3">Save Thumbnail</h3>
             
             <div>
-              <label htmlFor="save-name-generator" className="block text-sm font-medium text-gray-300 mb-1">Name</label>
+              <label htmlFor="save-name-generator" className="block text-body-sm font-bold text-yt-neutral-text mb-1">Name</label>
               <input
                 id="save-name-generator"
                 type="text"
                 value={saveName}
                 onChange={(e) => setSaveName(e.target.value)}
-                className="w-full bg-gray-700 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full bg-yt-neutral-bg-800 rounded-lg px-3 h-control-md focus:outline-none focus:ring-2 focus:ring-yt-accent-focus text-body-sm"
                 placeholder="Enter a name..."
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1">Project</label>
-              <div className="bg-gray-900 rounded-md p-2 h-48 overflow-y-auto border border-gray-700 space-y-1">
+              <label className="block text-body-sm font-bold text-yt-neutral-text mb-1">Project</label>
+              <div className="bg-yt-neutral-bg-950 rounded-lg p-2 h-48 overflow-y-auto border-thin border-yt-neutral-border space-y-1">
                 <button
                   onClick={() => { setSelectedFolderId('uncategorized'); setIsCreatingNewProject(false); }}
-                  className={`w-full text-left px-3 py-2 rounded-md text-sm flex items-center gap-2 transition-colors ${
-                    selectedFolderId === 'uncategorized' && !isCreatingNewProject ? 'bg-blue-600 text-white' : 'hover:bg-gray-700'
+                  className={`w-full text-left px-3 py-2 rounded-lg text-body-sm flex items-center gap-2 transition-colors focus:outline-none focus:ring-2 focus:ring-yt-accent-focus ${
+                    selectedFolderId === 'uncategorized' && !isCreatingNewProject ? 'bg-yt-primary-500 text-black font-bold' : 'hover:bg-yt-neutral-bg-800'
                   }`}
                 >
-                  <FolderIcon className="h-4 w-4" />
+                  <i className="fa-solid fa-folder text-body" aria-hidden="true"></i>
                   Uncategorized
                 </button>
                 {folders.map(folder => (
                   <button
                     key={folder.id}
                     onClick={() => { setSelectedFolderId(folder.id); setIsCreatingNewProject(false); }}
-                    className={`w-full text-left px-3 py-2 rounded-md text-sm flex items-center gap-2 transition-colors truncate ${
-                      selectedFolderId === folder.id && !isCreatingNewProject ? 'bg-blue-600 text-white' : 'hover:bg-gray-700'
+                    className={`w-full text-left px-3 py-2 rounded-lg text-body-sm flex items-center gap-2 transition-colors truncate focus:outline-none focus:ring-2 focus:ring-yt-accent-focus ${
+                      selectedFolderId === folder.id && !isCreatingNewProject ? 'bg-yt-primary-500 text-black font-bold' : 'hover:bg-yt-neutral-bg-800'
                     }`}
                   >
-                    <FolderIcon className="h-4 w-4" />
+                    <i className="fa-solid fa-folder text-body" aria-hidden="true"></i>
                     {folder.name}
                   </button>
                 ))}
@@ -190,9 +190,9 @@ export const ImageGenerator: React.FC<ImageGeneratorProps> = ({ onHistoryUpdate 
             {!isCreatingNewProject ? (
               <button
                   onClick={() => { setIsCreatingNewProject(true); setSelectedFolderId('new'); }}
-                  className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-gray-700 hover:bg-gray-600 rounded-md text-sm transition-colors"
+                  className="w-full flex items-center justify-center gap-2 px-3 h-control-md bg-yt-neutral-bg-800 hover:bg-yt-neutral-borderStrong rounded-lg text-body-sm transition-colors focus:outline-none focus:ring-2 focus:ring-yt-accent-focus"
               >
-                  <FolderPlusIcon className="h-4 w-4" />
+                  <i className="fa-solid fa-folder-plus text-body" aria-hidden="true"></i>
                   New Project
               </button>
             ) : (
@@ -201,25 +201,25 @@ export const ImageGenerator: React.FC<ImageGeneratorProps> = ({ onHistoryUpdate 
                     type="text"
                     value={newProjectName}
                     onChange={(e) => setNewProjectName(e.target.value)}
-                    className="w-full bg-gray-700 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                    className="w-full bg-yt-neutral-bg-800 rounded-lg px-3 h-control-md focus:outline-none focus:ring-2 focus:ring-yt-accent-focus text-body-sm"
                     placeholder="Enter new project name..."
                     autoFocus
                   />
                   <div className="flex justify-end gap-2">
-                      <button type="button" onClick={() => { setIsCreatingNewProject(false); setSelectedFolderId('uncategorized'); }} className="px-3 py-1 bg-gray-600 hover:bg-gray-500 rounded-md text-xs">Cancel</button>
-                      <button type="submit" disabled={!newProjectName.trim()} className="px-3 py-1 bg-blue-600 hover:bg-blue-700 rounded-md text-xs disabled:opacity-50">Create</button>
+                      <button type="button" onClick={() => { setIsCreatingNewProject(false); setSelectedFolderId('uncategorized'); }} className="px-3 py-1 bg-yt-neutral-borderStrong hover:bg-yt-neutral-border rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-yt-accent-focus">Cancel</button>
+                      <button type="submit" disabled={!newProjectName.trim()} className="px-3 py-1 bg-yt-primary-500 text-black hover:bg-yt-primary-600 rounded-lg text-xs disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-yt-accent-focus">Create</button>
                   </div>
               </form>
             )}
 
             <div className="flex justify-end gap-2 pt-2">
-              <button onClick={() => setIsSaveModalOpen(false)} className="px-4 py-2 bg-gray-600 hover:bg-gray-500 rounded-md text-sm">Cancel</button>
+              <button onClick={() => setIsSaveModalOpen(false)} className="px-4 h-control-md bg-yt-neutral-borderStrong hover:bg-yt-neutral-border rounded-lg text-body-sm focus:outline-none focus:ring-2 focus:ring-yt-accent-focus">Cancel</button>
               <button 
                 onClick={handleConfirmSave} 
                 disabled={!saveName.trim() || isSaving} 
-                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-md text-sm disabled:opacity-50 flex items-center justify-center w-24"
+                className="px-4 h-control-md bg-yt-primary-500 text-black hover:bg-yt-primary-600 rounded-lg text-body-sm disabled:opacity-50 flex items-center justify-center w-24 focus:outline-none focus:ring-2 focus:ring-yt-accent-focus"
               >
-                {isSaving ? <Spinner className="w-4 h-4" /> : 'Save'}
+                {isSaving ? <Spinner className="w-icon-sm h-icon-sm" /> : 'Save'}
               </button>
             </div>
           </div>

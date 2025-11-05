@@ -1,4 +1,3 @@
-
 import React from 'react';
 
 type IconProps = {
@@ -27,7 +26,7 @@ export const DownloadIcon: React.FC<IconProps> = ({ className }) => (
 
 export const SendIcon: React.FC<IconProps> = ({ className }) => (
     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-        <line x1="22" y1="2" x2="11" y2="13" /><polygon points="22 2 15 22 11 13 2 9 22 2" />
+        <line x1="22" y1="2" x2="11" y2="13" /><polygon points="22 2 15 22 11 13 2 9 22 2" fill="currentColor" />
     </svg>
 );
 
@@ -137,5 +136,14 @@ export const TemplateIcon: React.FC<IconProps> = ({ className }) => (
 export const ChevronRightIcon: React.FC<IconProps> = ({ className }) => (
     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
         <path d="m9 18 6-6-6-6"/>
+    </svg>
+);
+
+export const FrameIcon: React.FC<IconProps> = ({ className }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+        <line x1="22" x2="2" y1="6" y2="6"></line>
+        <line x1="22" x2="2" y1="18" y2="18"></line>
+        <line x1="6" x2="6" y1="2" y2="22"></line>
+        <line x1="18" x2="18" y1="2" y2="22"></line>
     </svg>
 );

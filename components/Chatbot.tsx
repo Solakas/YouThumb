@@ -1,10 +1,9 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { geminiService } from '../services/geminiService';
 import { ChatMessage } from '../types';
-import { SendIcon } from './Icons';
 import { Spinner } from './Spinner';
-import type { Chat } from '@google/genai';
+// Fix: Correct import to follow coding guidelines.
+import { Chat } from '@google/genai';
 
 export const Chatbot: React.FC = () => {
     const [messages, setMessages] = useState<ChatMessage[]>([{role: 'model', content: "Hello! How can I help you today?"}]);
@@ -44,22 +43,22 @@ export const Chatbot: React.FC = () => {
 
     return (
         <div className="flex flex-col h-full max-w-3xl mx-auto w-full">
-            <h1 className="text-3xl sm:text-4xl font-bold mb-4 text-center">Gemini Chat</h1>
-            <div className="flex-grow bg-gray-800 rounded-lg p-4 overflow-y-auto mb-4">
+            <h1 className="text-h1 font-extrabold mb-4 text-center">Gemini Chat</h1>
+            <div className="flex-grow bg-yt-neutral-bg-900 rounded-2xl p-4 overflow-y-auto mb-4">
                 <div className="space-y-4">
                     {messages.map((msg, index) => (
                          <div key={index} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                            <div className={`max-w-md rounded-lg px-4 py-2 ${
-                                msg.role === 'user' ? 'bg-blue-600' : 
-                                msg.role === 'model' ? 'bg-gray-700' : 'bg-red-800 text-red-100'
+                            <div className={`max-w-md px-4 py-2 ${
+                                msg.role === 'user' ? 'bg-yt-secondary-500 text-yt-neutral-text rounded-l-xl rounded-tr-xl' : 
+                                msg.role === 'model' ? 'bg-yt-neutral-bg-800 rounded-r-xl rounded-tl-xl' : 'bg-yt-semantic-danger text-yt-neutral-text rounded-xl'
                             }`}>
-                                <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
+                                <p className="text-body-sm whitespace-pre-wrap">{msg.content}</p>
                             </div>
                         </div>
                     ))}
                      {isLoading && (
                         <div className="flex justify-start">
-                            <div className="max-w-md rounded-lg px-4 py-2 bg-gray-700 flex items-center gap-2">
+                            <div className="max-w-md rounded-xl px-4 py-2 bg-yt-neutral-bg-800 flex items-center gap-2">
                                 <Spinner/>
                             </div>
                         </div>
@@ -73,11 +72,11 @@ export const Chatbot: React.FC = () => {
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
                     placeholder="Ask me anything..."
-                    className="flex-grow bg-gray-700 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="flex-grow bg-yt-neutral-bg-800 rounded-lg px-4 h-control-md focus:outline-none focus:ring-2 focus:ring-yt-accent-focus text-body-sm"
                     disabled={isLoading}
                 />
-                <button type="submit" disabled={isLoading || !input.trim()} className="bg-blue-600 hover:bg-blue-700 rounded-lg px-4 py-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
-                    <SendIcon className="h-5 w-5" />
+                <button type="submit" disabled={isLoading || !input.trim()} className="bg-yt-primary-500 hover:bg-yt-primary-600 text-black rounded-lg px-4 h-control-md disabled:opacity-50 disabled:cursor-not-allowed transition-colors focus:outline-none focus:ring-2 focus:ring-yt-accent-focus">
+                    <i className="fa-solid fa-paper-plane text-h4" aria-hidden="true"></i>
                 </button>
             </form>
         </div>
